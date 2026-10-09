@@ -57,6 +57,7 @@ jobs:
 
       - name: Build
         run: |
+          set -o pipefail
           xcodebuild -project OTPAuthenticator.xcodeproj \
             -scheme OTPAuthenticator \
             -configuration Release \
@@ -64,22 +65,28 @@ jobs:
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            build 2>&1 | tail -80
+            build 2>&1 | tee build.log | tail -100
+          echo "---EXIT CODE: ${PIPESTATUS[0]}---"
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "BUILD FAILED - showing errors:"
+            grep -i "error:" build.log | head -30
+            exit 1
+          fi
         timeout-minutes: 10
 
       - name: Package IPA
         run: |
-          APP_PATH="build/Build/Products/Release-iphoneos/OTPAuthenticator.app"
-          if [ -d "$APP_PATH" ]; then
-            mkdir -p Payload
-            cp -R "$APP_PATH" Payload/
-            zip -r OTPAuthenticator.ipa Payload
-            ls -la OTPAuthenticator.ipa
-          else
-            echo "App not found at $APP_PATH"
-            find build -name "*.app" -type d 2>/dev/null || true
+          APP_PATH=$(find build -name "OTPAuthenticator.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: OTPAuthenticator.app not found"
+            find build -name "*.app" -type d
             exit 1
           fi
+          echo "Found app at: $APP_PATH"
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r OTPAuthenticator.ipa Payload
+          ls -la OTPAuthenticator.ipa
 
       - name: Upload IPA
         uses: actions/upload-artifact@v5
