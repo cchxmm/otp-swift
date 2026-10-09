@@ -10,16 +10,18 @@ env:
 
 jobs:
   build:
-    runs-on: macos-13
+    runs-on: macos-14
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: |
-          sudo xcode-select -s /Applications/Xcode_14.3.1.app/Contents/Developer || \
-          sudo xcode-select -s /Applications/Xcode_14.app/Contents/Developer
-          xcodebuild -version
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+        timeout-minutes: 5
 
       - name: Create project.yml
         run: |
@@ -48,15 +50,10 @@ jobs:
                   CODE_SIGNING_REQUIRED: NO
                   INFOPLIST_FILE: OTPAuthenticator/Info.plist
           EOF
-          cat project.yml
-
-      - name: Install XcodeGen
-        run: brew install xcodegen
 
       - name: Generate Xcode Project
-        run: |
-          xcodegen generate
-          ls -la OTPAuthenticator.xcodeproj
+        run: xcodegen generate
+        timeout-minutes: 3
 
       - name: Build
         run: |
@@ -68,6 +65,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             build
+        timeout-minutes: 10
 
       - name: Package IPA
         run: |
