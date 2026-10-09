@@ -10,8 +10,8 @@ env:
 
 jobs:
   build:
-    runs-on: macos-14
-    timeout-minutes: 20
+    runs-on: macos-15
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -29,7 +29,6 @@ jobs:
           name: OTPAuthenticator
           options:
             bundleIdPrefix: com.zkay
-            xcodeVersion: "14.0"
             deploymentTarget:
               iOS: "15.0"
           targets:
@@ -73,7 +72,7 @@ jobs:
             grep -i "error:" build.log | head -30
             exit 1
           fi
-        timeout-minutes: 10
+        timeout-minutes: 15
 
       - name: Package IPA
         run: |
