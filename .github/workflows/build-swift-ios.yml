@@ -29,6 +29,7 @@ jobs:
           name: OTPAuthenticator
           options:
             bundleIdPrefix: com.zkay
+            xcodeVersion: "14.0"
             deploymentTarget:
               iOS: "15.0"
           targets:
